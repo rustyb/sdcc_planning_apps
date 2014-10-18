@@ -27,21 +27,43 @@ import scraperwiki
 import requests
 import lxml.html
 
-html = requests.get("http://www.sdublincoco.ie/index.aspx?pageid=144&regref=SD14A/0208").content
-dom = lxml.html.fromstring(html)
-
-for entry in dom.cssselect('.details-list'):
-    post = {
-        'date_recieved': entry.cssselect('dd')[2].text_content(),
-        'last_action': entry.cssselect('dd')[3].text_content(),
-        'application_type': entry.cssselect('dd')[4].text_content(),
-        'submission_type': entry.cssselect('dd')[5].text_content(),
-        'applicant': entry.cssselect('dd')[7].text_content(),
-        'location': entry.cssselect('dd')[8].text_content(),
-        'proposed_dev': entry.cssselect('dd')[9].text_content(),
-        'decision_due': entry.cssselect('dd')[10].text_content()
-    }
-    print post
+unique_keys = [ 'reg_ref' ]
+for i in range(1,447):
+    html = requests.get("http://www.sdublincoco.ie/index.aspx?pageid=144&type=apps&fromdate=01-01-2007&todate=17-10-2014&dateoptions=specific&area=Any&keywordtype=regref&term=&p=%s" % i).content
+    print "Page %s" % i
+    dom = lxml.html.fromstring(html)
+    
+    for tr in dom.cssselect("tbody tr"):
+        tds = tr.cssselect("td")
+        if len(tds)==7:
+            data = {
+                'reg_ref' : tds[0].text_content(),
+                'last_action' : tds[1].text_content(),
+                'closing_date' : tds[2].text_content(),
+                'app_name': tds[3].text_content(),
+                'location': tds[4].text_content()
+            }
+            #print data
+            scraperwiki.sql.save(unique_keys, data)
+    
+"""    for entry in dom.cssselect('tbody tr'):
+        pp = {
+            '
+        }
+        post = {
+            'date_recieved': entry.cssselect('dd')[2].text_content(),
+            'last_action': entry.cssselect('dd')[3].text_content(),
+            'application_type': entry.cssselect('dd')[4].text_content(),
+            'submission_type': entry.cssselect('dd')[5].text_content(),
+            'applicant': entry.cssselect('dd')[7].text_content(),
+            'location': entry.cssselect('dd')[8].text_content(),
+            'proposed_dev': entry.cssselect('dd')[9].text_content(),
+            'decision_due': entry.cssselect('dd')[10].text_content()
+        }
+        print post
+    
+"""
+    
 # Saving data:
 # unique_keys = [ 'id' ]
 # data = { 'id':12, 'name':'violet', 'age':7 }
